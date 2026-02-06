@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String?   @unique
+  password         String?
+  image            String?
+  prestige         String?   @default("SILVER")
+  bio              String?
+  birthDate        DateTime?
+  gender           String?
+  assets           Float?
+  isApproved       Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  age              Int?
+  education        String?
+  location         String?
+  occupation       String?
+  tags             String?
+  matchesJoined    Match[]          @relation("User2")
+  matchesStarted   Match[]          @relation("User1")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  sentMessages     Message[]        @relation("SentMessages")
+  verifications    Verification[]
+  requestedBookings Booking[]       @relation("BookingRequester")
+  partnerBookings   Booking[]       @relation("BookingPartner")
+  favorites        Favorite[]      @relation("UserFavorites")
+  favoritedBy      Favorite[]      @relation("TargetedBy")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  targetId  String
+  user      User     @relation("UserFavorites", fields: [userId], references: [id])
+  target    User     @relation("TargetedBy", fields: [targetId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, targetId])
+}
+
+model Verification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // ID, ASSETS, CAREER
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  document  String?  // Image URL/Path
+  createdAt DateTime @default(now())
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  requesterId String
+  partnerId   String
+  scheduledAt DateTime
+  location    String?
+  status      String   @default("PENDING") // PENDING, CONFIRMED, CANCELED
+  requester   User     @relation("BookingRequester", fields: [requesterId], references: [id])
+  partner     User     @relation("BookingPartner", fields: [partnerId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model ProfileUpdate {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String?
+  bio        String?
+  age        Int?
+  location   String?
+  occupation String?
+  education  String?
+  tags       String?
+  updatedAt  DateTime @default(now())
+}
+
+model Match {
+  id                 String    @id @default(cuid())
+  user1Id            String
+  user2Id            String
+  createdAt          DateTime  @default(now())
+  user2              User      @relation("User2", fields: [user2Id], references: [id])
+  user1              User      @relation("User1", fields: [user1Id], references: [id])
+  messages           Message[]
+  deleteRequestUser1 Boolean   @default(false)
+  deleteRequestUser2 Boolean   @default(false)
+
+  @@unique([user1Id, user2Id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  matchId    String?
+  createdAt  DateTime @default(now())
+  match      Match?   @relation(fields: [matchId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+}
