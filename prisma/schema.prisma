@@ -35,7 +35,6 @@ model User {
   partnerBookings   Booking[]       @relation("BookingPartner")
   favorites        Favorite[]      @relation("UserFavorites")
   favoritedBy      Favorite[]      @relation("TargetedBy")
-  payments         Payment[]
 }
 
 model Favorite {
@@ -137,25 +136,22 @@ model Revenue {
   status      String   @default("PENDING") // PENDING, COMPLETED, FAILED
   description String?
   orderId     String?  @unique
-  paymentId   String?  @unique
-  payment     Payment? @relation(fields: [paymentId], references: [id])
+  paymentId   String?  @unique // Payment ID (간단 참조용, FK 제약 없음)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Payment {
   id            String   @id @default(cuid())
-  userId        String?
-  user          User?    @relation(fields: [userId], references: [id])
+  userId        String?  // 결제한 사용자 ID
   amount        Float
   currency      String   @default("KRW")
   paymentMethod String   // card, transfer, vbank, etc.
   status        String   @default("PENDING") // PENDING, COMPLETED, FAILED, CANCELLED
   impUid        String?  @unique // PortOne 결제 고유 ID
-  merchantUid   String   @unique // 가맹점 결제 UID (orderId와 유사)
+  merchantUid   String   @unique // 가맹점 결제 UID
   receiptUrl    String?  // 영수증 URL
   errorMessage  String?  // 결제 실패 메시지
-  revenue       Revenue? // Reverse relation
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
