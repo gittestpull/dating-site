@@ -30,11 +30,29 @@ This file tracks the continuous improvement cycle for GoldRush.
   - [x] Announce Update
   - [x] Plan Next Cycle
 
-## Cycle 3: AI Matching & Real-time Chat (Planned)
-- **Plan** (Ready):
-  - [ ] AI Matching Algorithm (Serendipity Score)
-  - [ ] Real-time Chat System (WebSocket)
-  - [ ] Push Notifications (Firebase)
+## Cycle 3: AI Matching Algorithm (In Progress)
+- **Plan**:
+  - [x] Design Matching Algorithm (Serendipity Score: Location + Education + Interests + Age)
+  - [x] Define Match API endpoints (GET /api/match/candidates, POST /api/match/like)
+  - [x] Design scoring system (0-100 scale)
+  - [ ] Implement scoring logic
+  - [ ] Create Match UI (candidate cards + like/pass buttons)
+  - [ ] Build Serendipity Dashboard (upcoming matches)
+- **Do** (Pending):
+  - [ ] Implement getMatchCandidates() logic
+  - [ ] Implement scoringEngine() (calculate Serendipity Score)
+  - [ ] Create /api/match/candidates endpoint
+  - [ ] Create /api/match/like endpoint
+  - [ ] Build CandidateCard component
+  - [ ] Build MatchDashboard page
+- **Check (QA)** (Pending):
+  - [ ] Test matching algorithm accuracy
+  - [ ] Test candidate ranking
+  - [ ] Test like/pass flow
+- **Act** (Pending):
+  - [ ] Deploy to port 7777
+  - [ ] Full flow test
+  - [ ] Announce to users
 
 ---
 

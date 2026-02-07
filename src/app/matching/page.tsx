@@ -1,285 +1,222 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, RotateCcw, Crown, Filter, Star, Users } from "lucide-react";
-import ProfileCard from "@/components/ProfileCard";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { useToast } from "@/components/Toast";
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/Toast';
+import CandidateCard from '@/components/match/CandidateCard';
+import { Heart, Flame, ArrowLeft } from 'lucide-react';
+
+interface Candidate {
+  id: string;
+  name?: string;
+  age?: number;
+  education?: string;
+  location?: string;
+  occupation?: string;
+  tags?: string;
+  prestige?: string;
+  image?: string;
+  bio?: string;
+  serendipityScore: number;
+}
 
 export default function MatchingPage() {
-  const { showToast } = useToast();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [liveUsers, setLiveUsers] = useState(1248);
-  const [show3D, setShow3D] = useState(false);
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
-  const [showMatchSuccess, setShowMatchSuccess] = useState(false);
   const { data: session } = useSession();
+  const router = useRouter();
+  const { showToast } = useToast();
 
-  const handleNext = () => {
-    if (currentIndex < filteredProfiles.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [likeCount, setLikeCount] = useState(0);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    fetchCandidates();
+  }, [session]);
+
+  const fetchCandidates = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `/api/match/candidates?userId=${session?.user?.id}&limit=20`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setCandidates(data.candidates || []);
+        setCurrentIndex(0);
+      } else {
+        showToast('❌ 후보 조회 실패', 'warning');
+      }
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+      showToast('❌ 오류가 발생했습니다', 'warning');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async (targetId: string) => {
+    try {
+      const res = await fetch('/api/match/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+          targetId,
+        }),
+      });
+
+      if (res.ok) {
+        showToast(`💕 ${candidates[currentIndex]?.name}님에게 좋아요를 보냈습니다!`, 'success');
+        setLikeCount(likeCount + 1);
+        handleNextCandidate();
+      } else if (res.status === 409) {
+        showToast('이미 매칭된 사용자입니다', 'info');
+        handleNextCandidate();
+      } else {
+        showToast('좋아요 전송 실패', 'warning');
+      }
+    } catch (error) {
+      console.error('Error sending like:', error);
+      showToast('오류가 발생했습니다', 'warning');
+    }
+  };
+
+  const handlePass = async (targetId: string) => {
+    showToast(`${candidates[currentIndex]?.name}님을 패스했습니다`, 'info');
+    handleNextCandidate();
+  };
+
+  const handleNextCandidate = () => {
+    if (currentIndex < candidates.length - 1) {
+      setCurrentIndex(currentIndex + 1);
     } else {
+      showToast('🎉 모든 후보를 확인했습니다!', 'success');
       setCurrentIndex(0);
+      fetchCandidates();
     }
   };
 
-  useEffect(() => {
-    fetch("/api/profiles")
-      .then(res => res.json())
-      .then(data => setProfiles(data))
-      .catch(err => console.error("Matching load error:", err));
+  if (!session?.user?.id) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white mb-4">로그인이 필요합니다</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="px-8 py-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-500 transition"
+          >
+            로그인하기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-    fetch("/api/favorites")
-      .then(res => res.json())
-      .then(data => setFavorites(Array.isArray(data) ? data : []))
-      .catch(err => console.error("Favorites load error:", err));
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Flame className="h-12 w-12 text-gold animate-pulse" />
+      </div>
+    );
+  }
 
-  const toggleFavorite = async (targetId: string) => {
-    const res = await fetch("/api/favorites", {
-      method: "POST",
-      body: JSON.stringify({ targetId }),
-    });
-    const data = await res.json();
-    if (data.status === "added") {
-      setFavorites(prev => [...prev, targetId]);
-      showToast("✨ 관심 멤버로 등록되었습니다.", "favorite");
-    } else if (data.status === "removed") {
-      setFavorites(prev => prev.filter(id => id !== targetId));
-      showToast("관심 멤버에서 해제되었습니다.", "info");
-    }
-  };
+  if (candidates.length === 0) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gold text-xl mb-4">사용 가능한 후보가 없습니다</p>
+          <button
+            onClick={() => router.push('/profile')}
+            className="px-8 py-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-500 transition"
+          >
+            프로필 완성하기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveUsers(prev => prev + Math.floor(Math.random() * 5) - 2);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleMatch = async () => {
-    if (!currentProfile || !session?.user?.id) return;
-    
-    await fetch("/api/matches/create", {
-      method: "POST",
-      body: JSON.stringify({ targetUserId: currentProfile.id }),
-    });
-
-    setShowMatchSuccess(true);
-    setTimeout(() => {
-      setShowMatchSuccess(false);
-      handleNext();
-    }, 2000);
-  };
-
-  const filteredProfiles = showOnlyFavorites 
-    ? profiles.filter(p => favorites.includes(p.id))
-    : profiles;
-
-  const currentProfile = filteredProfiles[currentIndex];
-
-  if (profiles.length === 0) return <div className="p-20 text-center">Loading selection...</div>;
+  const currentCandidate = candidates[currentIndex];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center pt-8 pb-24 px-4 overflow-hidden">
-      {/* Premium Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-lg flex items-center justify-between mb-10"
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center border border-gold/20">
-            <Crown className="h-5 w-5 text-gold" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Today's Selection</h1>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
-                <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">{liveUsers.toLocaleString()} Live</span>
-              </div>
-              <p className="text-[10px] font-bold text-gold uppercase tracking-widest">{showOnlyFavorites ? 'Favorites Only' : 'Premium Curated'}</p>
-            </div>
+    <div className="min-h-screen bg-black text-white p-4">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 pt-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gold/10 rounded-full transition"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Flame className="h-8 w-8 text-gold" />
+            Matching
+          </h1>
+          <div className="text-center">
+            <p className="text-xs text-gray-400">Today's Likes</p>
+            <p className="text-xl font-bold text-gold">{likeCount}</p>
           </div>
         </div>
-        <button 
-          onClick={() => {
-            setShowOnlyFavorites(!showOnlyFavorites);
-            setCurrentIndex(0);
-          }}
-          className={`h-12 w-12 rounded-2xl bg-surface border flex items-center justify-center transition-all ${showOnlyFavorites ? 'border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'border-white/5 text-white/40 hover:text-gold'}`}
-        >
-          <Filter className="h-5 w-5" />
-        </button>
-      </motion.div>
 
-      {/* Match Success Overlay */}
-      <AnimatePresence>
-        {showMatchSuccess && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.5, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="text-center"
-            >
-              <div className="mb-6 flex justify-center">
-                <div className="h-32 w-32 rounded-full bg-gold-gradient p-1 shadow-[0_0_50px_rgba(212,175,55,0.8)]">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-black">
-                    <Heart className="h-16 w-16 fill-gold text-gold animate-pulse stroke-[2px]" />
-                  </div>
-                </div>
-              </div>
-              <h2 className="text-4xl font-bold text-gold mb-2">MATCH SUCCESS!</h2>
-              <p className="text-white/60 text-lg">상대방에게 매칭 신청을 보냈습니다.</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Card Container */}
-      <div className="relative w-full max-w-lg aspect-[3/4.5] mb-12">
-        {filteredProfiles.length > 0 ? (
-          <>
-            <div className="absolute top-4 right-4 z-20">
-              <button 
-                onClick={() => setShow3D(!show3D)}
-                className={`px-4 py-2 rounded-full border text-[10px] font-bold tracking-widest uppercase transition-all ${show3D ? 'bg-gold text-black border-gold' : 'bg-black/40 text-gold border-gold/30 backdrop-blur-md'}`}
-              >
-                {show3D ? 'View Photo' : 'View 3D'}
-              </button>
-            </div>
-
-            <AnimatePresence mode="wait">
-              {show3D ? (
-                <motion.div
-                  key="3d-viewer"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full h-full rounded-[2rem] overflow-hidden bg-surface border border-gold/20"
-                  dangerouslySetInnerHTML={{
-                    __html: `<model-viewer src="/3d_model.glb" alt="3D Profile Model" auto-rotate camera-controls style="width: 100%; height: 100%; background: #0a0a0a;"></model-viewer>`
-                  }}
-                />
-              ) : (
-                <motion.div
-                  key={currentProfile.id}
-                  initial={{ opacity: 0, scale: 0.9, x: 100 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 1.1, x: -100 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  className="w-full h-full"
-                >
-                  <ProfileCard profile={currentProfile} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Swipe Indicators - Luxury Glass Style */}
-            <div className="absolute -left-20 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4">
-              <div className="text-[10px] font-bold text-white/20 uppercase vertical-text tracking-[0.5em] mb-4">DISLIKE</div>
-              <button 
-                onClick={handleNext}
-                className="h-16 w-16 rounded-full bg-surface border border-white/5 flex items-center justify-center text-white/20 hover:text-red-500 hover:border-red-500/50 transition-all hover:scale-110"
-              >
-                <X className="h-8 w-8" />
-              </button>
-            </div>
-
-            <div className="absolute -right-20 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4">
-              <div className="text-[10px] font-bold text-gold/40 uppercase vertical-text tracking-[0.5em] mb-4">MATCH</div>
-              <button 
-                onClick={handleMatch}
-                className="h-16 w-16 rounded-full bg-gold-gradient flex items-center justify-center text-black hover:scale-110 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-              >
-                <Heart className="h-8 w-8 fill-black stroke-black stroke-2" />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-surface rounded-[2rem] border border-white/5 p-12 text-center">
-            <Star className="h-16 w-16 text-gold/20 mb-6" />
-            <h2 className="text-2xl font-bold mb-4">즐겨찾기 멤버가 없습니다</h2>
-            <p className="text-white/40 mb-8">관심있는 프로필에서 별 버튼을 눌러 즐겨찾기에 추가해보세요.</p>
-            <button 
-              onClick={() => setShowOnlyFavorites(false)}
-              className="px-8 py-3 rounded-full bg-white/5 border border-white/10 text-xs font-bold tracking-widest uppercase hover:bg-white/10 transition-all"
-            >
-              전체 멤버 보기
-            </button>
+        {/* Progress Bar */}
+        <div className="mb-6">
+          <div className="flex justify-between mb-2">
+            <p className="text-sm text-gray-400">
+              {currentIndex + 1} / {candidates.length}
+            </p>
+            <p className="text-sm text-gray-400">
+              {Math.round(((currentIndex + 1) / candidates.length) * 100)}%
+            </p>
           </div>
-        )}
+          <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-gold to-yellow-500 transition-all duration-300"
+              style={{
+                width: `${((currentIndex + 1) / candidates.length) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Candidate Card */}
+        <CandidateCard
+          candidate={currentCandidate}
+          onLike={handleLike}
+          onPass={handlePass}
+          isLoading={loading}
+        />
+
+        {/* Stats */}
+        <div className="mt-8 grid grid-cols-3 gap-4">
+          <div className="bg-gray-900 rounded-lg p-4 text-center border border-gold/10">
+            <Heart className="h-6 w-6 text-gold mx-auto mb-2" />
+            <p className="text-xs text-gray-400">Total Likes</p>
+            <p className="text-xl font-bold">{likeCount}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-4 text-center border border-gold/10">
+            <Flame className="h-6 w-6 text-gold mx-auto mb-2" />
+            <p className="text-xs text-gray-400">AVG Score</p>
+            <p className="text-xl font-bold">
+              {candidates.length > 0
+                ? Math.round(
+                    candidates.reduce((sum, c) => sum + c.serendipityScore, 0) /
+                      candidates.length
+                  )
+                : 0}
+            </p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-4 text-center border border-gold/10">
+            <p className="text-xs text-gray-400">Remaining</p>
+            <p className="text-xl font-bold">
+              {Math.max(0, candidates.length - currentIndex - 1)}
+            </p>
+          </div>
+        </div>
       </div>
-
-      {/* Control Buttons for Mobile/Standard */}
-      {filteredProfiles.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-6"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={() => setCurrentIndex(0)}
-              className="h-14 w-14 rounded-2xl bg-surface border border-white/5 flex items-center justify-center text-white/40 hover:text-blue-400 transition-all"
-              title="처음부터 다시보기"
-            >
-              <RotateCcw className="h-6 w-6" />
-            </button>
-            <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Rewind</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={handleNext}
-              className="h-20 w-20 rounded-3xl bg-surface border border-white/10 flex items-center justify-center text-white/60 hover:text-red-500 hover:border-red-500/50 transition-all hover:scale-110 active:scale-95"
-              title="관심 없음"
-            >
-              <X className="h-10 w-10" />
-            </button>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Pass</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={handleMatch}
-              className="h-24 w-24 rounded-[2.5rem] bg-gold-gradient flex items-center justify-center text-black shadow-[0_10px_30px_rgba(212,175,55,0.6)] transition-all hover:scale-110 active:scale-95"
-              title="매칭 신청"
-            >
-              <Heart className="h-12 w-12 fill-black stroke-black stroke-[3px]" />
-            </button>
-            <span className="text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Match</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={() => toggleFavorite(currentProfile.id)}
-              className={`h-14 w-14 rounded-2xl bg-surface border flex items-center justify-center transition-all ${favorites.includes(currentProfile.id) ? 'border-gold text-gold bg-gold/5' : 'border-white/5 text-white/40 hover:text-purple-400'}`}
-              title="즐겨찾기"
-            >
-              <Star className={`h-6 w-6 ${favorites.includes(currentProfile.id) ? 'fill-current' : ''}`} />
-            </button>
-            <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Fav</span>
-          </div>
-        </motion.div>
-      )}
-
-      <style jsx>{`
-        .vertical-text {
-          writing-mode: vertical-rl;
-          text-orientation: mixed;
-        }
-      `}</style>
     </div>
   );
 }
