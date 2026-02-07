@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import { Heart, Mail, Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { login, signUp } from "@/lib/actions";
+import { useToast } from "@/components/Toast";
 
 export default function AuthPage() {
+  const { showToast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -22,14 +24,16 @@ export default function AuthPage() {
         const result = await login(formData);
         if (result?.error) {
           setError(result.error);
+          showToast(result.error, "warning");
         }
       } else {
         const result = await signUp(formData);
         if (result.error) {
           setError(result.error);
+          showToast(result.error, "warning");
         } else {
           setIsLogin(true);
-          setError("가입되었습니다. 이제 로그인해주세요.");
+          showToast("✨ 가입이 완료되었습니다. 로그인해주세요.", "success");
         }
       }
     });

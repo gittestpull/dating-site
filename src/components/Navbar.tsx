@@ -19,6 +19,8 @@ const NAV_ITEMS = [
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  // @ts-ignore
+  const isAdmin = session?.user?.prestige === 'ADMIN';
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-black/90 backdrop-blur-2xl md:top-0 md:bottom-auto md:border-t-0 md:border-b">
@@ -63,6 +65,27 @@ export default function Navbar() {
               </Link>
             );
           })}
+          
+          {isAdmin && (
+            <Link
+              href="/admin/dashboard"
+              className={cn(
+                "flex flex-col items-center gap-1.5 transition-all hover:scale-110 md:flex-row md:gap-2 group",
+                pathname.startsWith("/admin") ? "text-red-500" : "text-white/60"
+              )}
+            >
+              <div className={cn(
+                "p-2 rounded-xl transition-all flex items-center justify-center",
+                pathname.startsWith("/admin") ? "bg-red-500/10" : "group-hover:bg-white/10"
+              )}>
+                <Shield className={cn(
+                  "h-5 w-5 md:h-4 md:w-4",
+                  pathname.startsWith("/admin") ? "stroke-red-500" : "stroke-white/60"
+                )} strokeWidth={2.5} />
+              </div>
+              <span className="text-[9px] md:text-[11px] font-bold tracking-widest uppercase">ADMIN</span>
+            </Link>
+          )}
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
@@ -75,7 +98,9 @@ export default function Navbar() {
                 VVIP STATUS
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={async () => {
+                  await signOut({ redirect: true, callbackUrl: "/login" });
+                }}
                 className="text-[10px] font-bold tracking-widest text-white/20 hover:text-white transition-colors"
               >
                 LOGOUT

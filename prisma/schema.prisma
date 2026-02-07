@@ -108,3 +108,34 @@ model Message {
   receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
   sender     User     @relation("SentMessages", fields: [senderId], references: [id])
 }
+
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String   // APPROVE, REJECT, UPDATE
+  targetId  String
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // PARTY, MATCH, VERIFY, GENERAL
+  content   String
+  status    String   @default("PENDING") // PENDING, ANSWERED
+  createdAt DateTime @default(now())
+}
+
+model Revenue {
+  id          String   @id @default(cuid())
+  userId      String?
+  type        String   // SUBSCRIPTION, PREMIUM, ADDON, REFUND
+  amount      Float
+  currency    String   @default("KRW")
+  status      String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  description String?
+  orderId     String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

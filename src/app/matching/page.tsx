@@ -6,8 +6,10 @@ import { X, Heart, RotateCcw, Crown, Filter, Star, Users } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useToast } from "@/components/Toast";
 
 export default function MatchingPage() {
+  const { showToast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liveUsers, setLiveUsers] = useState(1248);
   const [show3D, setShow3D] = useState(false);
@@ -45,8 +47,10 @@ export default function MatchingPage() {
     const data = await res.json();
     if (data.status === "added") {
       setFavorites(prev => [...prev, targetId]);
+      showToast("✨ 관심 멤버로 등록되었습니다.", "favorite");
     } else if (data.status === "removed") {
       setFavorites(prev => prev.filter(id => id !== targetId));
+      showToast("관심 멤버에서 해제되었습니다.", "info");
     }
   };
 

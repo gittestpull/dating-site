@@ -14,6 +14,7 @@ export interface Profile {
   prestige?: string;
   education?: string;
   matchScore?: number;
+  assets?: number;
 }
 
 export const MOCK_PROFILES: Profile[] = [

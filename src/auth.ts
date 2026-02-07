@@ -33,14 +33,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           image: user.image,
+          prestige: user.prestige || undefined, // Convert null to undefined
         };
       },
     }),
   ],
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.prestige = user.prestige;
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
+        // @ts-ignore
+        session.user.prestige = token.prestige;
       }
       return session;
     },
