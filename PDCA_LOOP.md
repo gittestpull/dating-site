@@ -148,3 +148,32 @@ This file tracks the continuous improvement cycle for GoldRush.
   - [x] Git commit (bd949a5)
   - [x] Documentation updated
   - [x] Ready for Cycle 3
+
+## Cycle 4: Real-time Chat System (In Progress)
+- **Plan**:
+  - [x] Design Chat Architecture (Match-based messaging)
+  - [x] Define WebSocket message format
+  - [x] Plan Chat API endpoints
+  - [ ] Implement Chat data persistence
+  - [ ] Create Chat UI
+  - [ ] Integrate WebSocket for real-time
+- **Do** (In Progress):
+  - [ ] Extend Message model (add imageUrl, status)
+  - [ ] Create /api/chat/:matchId endpoint
+  - [ ] Create /api/chat/send endpoint
+  - [ ] Create WebSocket handler
+  - [ ] Build ChatWindow component
+  - [ ] Build ChatList page
+- **Check (QA)** (Pending):
+  - [ ] Test message persistence
+  - [ ] Test WebSocket connection
+  - [ ] Test real-time delivery
+- **Act** (Pending):
+  - [ ] Deploy to production
+  - [ ] Full chat flow test
+  - [ ] Announce to users
+
+## Cycle 5: Push Notifications (Planned)
+- Firebase Cloud Messaging
+- In-app notifications
+- Notification Dashboard
