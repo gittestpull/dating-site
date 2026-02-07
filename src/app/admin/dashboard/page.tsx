@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/Toast";
 import Modal from "@/components/ui/Modal";
 import RevenueModal from "@/components/admin/RevenueModal";
+import PaymentModal from "@/components/admin/PaymentModal";
 
 export default function AdminDashboard() {
   const { data: session } = useSession();
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'pending' | 'inquiries' | 'bookings'>('pending');
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [revenueSummary, setRevenueSummary] = useState<any>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -348,6 +350,12 @@ export default function AdminDashboard() {
               >
                 📊 매출 및 통계 확인
               </button>
+              <button 
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all font-medium text-left px-6"
+              >
+                💳 결제 처리
+              </button>
             </div>
           </div>
         </div>
@@ -360,6 +368,17 @@ export default function AdminDashboard() {
           fetchRevenue();
         }} 
         data={revenueSummary}
+      />
+      
+      <PaymentModal 
+        isOpen={isPaymentModalOpen} 
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          fetchRevenue();
+        }} 
+        onPaymentComplete={() => {
+          showToast("✅ 결제가 완료되었습니다.", "success");
+        }}
       />
     </div>
   );

@@ -57,8 +57,27 @@ This file tracks the continuous improvement cycle for GoldRush.
 - 2 Git commits
 - All tests passing
 
-## Cycle 2: Feature Expansion (Planned)
+## Cycle 2: Payment Gateway Integration (In Progress)
 - **Plan**:
-  - [ ] Payment Gateway Integration (PortOne/Toss)
-  - [ ] Advanced Matching Algorithm (AI-based)
-  - [ ] Real-time Chat System (WebSocket)
+  - [x] Choose Payment Provider (PortOne selected)
+  - [ ] Design Payment Flow (UI/UX)
+  - [ ] Create Payment API routes (POST /api/payment/request, POST /api/payment/confirm)
+  - [ ] Add Payment schema to Prisma (Payment, PaymentHistory)
+  - [ ] Build Payment Modal UI
+- **Do**:
+  - [ ] Implement Payment model in Prisma
+  - [ ] Create /api/payment/request endpoint
+  - [ ] Create /api/payment/confirm endpoint
+  - [ ] Build PaymentModal component
+  - [ ] Integrate with PortOne SDK
+  - [ ] Connect payment success → Revenue auto-create
+- **Check (QA)**:
+  - [ ] Test payment request generation
+  - [ ] Test payment confirmation flow
+  - [ ] Verify Revenue record auto-creation
+  - [ ] Test with PortOne test merchant key
+- **Act**:
+  - [ ] Deploy to Production
+  - [ ] Full payment flow test
+  - [ ] Document payment integration
+  - [ ] Plan Cycle 3
