@@ -145,8 +145,8 @@ model Revenue {
 
 model Payment {
   id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
   amount        Float
   currency      String   @default("KRW")
   paymentMethod String   // card, transfer, vbank, etc.
