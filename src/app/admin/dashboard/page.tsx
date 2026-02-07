@@ -356,6 +356,12 @@ export default function AdminDashboard() {
               >
                 💳 결제 처리
               </button>
+              <button 
+                onClick={() => router.push('/matching')}
+                className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all font-medium text-left px-6"
+              >
+                🔥 매칭 관리
+              </button>
             </div>
           </div>
         </div>
