@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { DollarSign, TrendingUp, X } from "lucide-react";
-import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/Toast";
 
 interface RevenueSummary {
@@ -66,15 +65,31 @@ export default function RevenueModal({
     }
   };
 
-  if (!isOpen || !data) return null;
+  if (!data) return null;
 
   const formatCurrency = (amount: number) => {
     return `₩${amount.toLocaleString("ko-KR")}`;
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-2xl mx-auto">
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+          />
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-2xl bg-surface border border-white/10 rounded-[2.5rem] p-8 shadow-2xl pointer-events-auto"
+            >
+      <div>
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <DollarSign className="w-8 h-8 text-green-500" />
@@ -93,12 +108,12 @@ export default function RevenueModal({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-4"
+            className="bg-white/5 border border-white/10 rounded-lg p-4"
           >
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+            <p className="text-sm text-white/60 mb-1">
               총 매출
             </p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-300">
+            <p className="text-2xl font-bold text-blue-400">
               {formatCurrency(data.total)}
             </p>
           </motion.div>
@@ -107,12 +122,12 @@ export default function RevenueModal({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-4"
+            className="bg-white/5 border border-white/10 rounded-lg p-4"
           >
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+            <p className="text-sm text-white/60 mb-1">
               확정 매출
             </p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-300">
+            <p className="text-2xl font-bold text-green-400">
               {formatCurrency(data.completed)}
             </p>
           </motion.div>
@@ -121,34 +136,34 @@ export default function RevenueModal({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 rounded-lg p-4"
+            className="bg-white/5 border border-white/10 rounded-lg p-4"
           >
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+            <p className="text-sm text-white/60 mb-1">
               대기 중
             </p>
-            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-300">
+            <p className="text-2xl font-bold text-yellow-400">
               {formatCurrency(data.pending)}
             </p>
           </motion.div>
         </div>
 
         {/* Revenue by Type */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-8">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-8">
+          <h3 className="font-semibold mb-4 flex items-center gap-2 text-gold">
             <TrendingUp className="w-5 h-5" />
             매출 분류
           </h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center pb-2 border-b dark:border-gray-600">
-              <span className="text-gray-700 dark:text-gray-300">
+            <div className="flex justify-between items-center pb-2 border-b border-white/10">
+              <span className="text-white/60">
                 구독료 (Subscription)
               </span>
               <span className="font-semibold">
                 {formatCurrency(data.byType.SUBSCRIPTION)}
               </span>
             </div>
-            <div className="flex justify-between items-center pb-2 border-b dark:border-gray-600">
-              <span className="text-gray-700 dark:text-gray-300">
+            <div className="flex justify-between items-center pb-2 border-b border-white/10">
+              <span className="text-white/60">
                 프리미엄 (Premium)
               </span>
               <span className="font-semibold">
@@ -156,7 +171,7 @@ export default function RevenueModal({
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-700 dark:text-gray-300">
+              <span className="text-white/60">
                 애드온 (Addon)
               </span>
               <span className="font-semibold">
@@ -171,12 +186,12 @@ export default function RevenueModal({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6"
+            className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6"
           >
-            <h3 className="font-semibold mb-4">매출 추가</h3>
+            <h3 className="font-semibold mb-4 text-white">매출 추가</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-white/80">
                   분류
                 </label>
                 <select
@@ -184,7 +199,7 @@ export default function RevenueModal({
                   onChange={(e) =>
                     setFormData({ ...formData, type: e.target.value })
                   }
-                  className="w-full px-3 py-2 border dark:bg-gray-600 dark:border-gray-500 rounded-lg"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 text-white rounded-lg"
                 >
                   <option value="SUBSCRIPTION">구독료</option>
                   <option value="PREMIUM">프리미엄</option>
@@ -193,7 +208,7 @@ export default function RevenueModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-white/80">
                   금액 (₩)
                 </label>
                 <input
@@ -203,12 +218,12 @@ export default function RevenueModal({
                     setFormData({ ...formData, amount: e.target.value })
                   }
                   placeholder="0"
-                  className="w-full px-3 py-2 border dark:bg-gray-600 dark:border-gray-500 rounded-lg"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 text-white rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-white/80">
                   설명 (선택)
                 </label>
                 <input
@@ -218,20 +233,20 @@ export default function RevenueModal({
                     setFormData({ ...formData, description: e.target.value })
                   }
                   placeholder="매출 설명"
-                  className="w-full px-3 py-2 border dark:bg-gray-600 dark:border-gray-500 rounded-lg"
+                  className="w-full px-3 py-2 border border-white/10 bg-white/5 text-white rounded-lg"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={handleAdd}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+                  className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg transition font-medium border border-green-500/30"
                 >
                   추가
                 </button>
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition"
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 px-4 py-2 rounded-lg transition font-medium border border-white/10"
                 >
                   취소
                 </button>
@@ -244,18 +259,22 @@ export default function RevenueModal({
         <div className="flex gap-3">
           <button
             onClick={() => setIsAdding(!isAdding)}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition font-medium"
+            className="flex-1 bg-gold/20 hover:bg-gold/30 text-gold px-4 py-2 rounded-lg transition font-medium border border-gold/30"
           >
             {isAdding ? "입력 취소" : "+ 매출 추가"}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition font-medium"
+            className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 px-4 py-2 rounded-lg transition font-medium border border-white/10"
           >
             닫기
           </button>
         </div>
       </div>
-    </Modal>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
