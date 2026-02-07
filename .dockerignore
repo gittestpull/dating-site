@@ -1,8 +1,10 @@
 node_modules
 .next
+.env.local
+.env*.local
+public/profiles/*.jpg
+public/profiles/*.png
+prisma/dev.db
 .git
-.env
-npm-debug.log
+.gitignore
 README.md
-Dockerfile
-.dockerignore

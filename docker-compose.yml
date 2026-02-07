@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  dating-site:
+    image: dating-site:revenue-v1
+    container_name: dating-site-prod
+    ports:
+      - "3002:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./prisma/dev.db
+      - NEXTAUTH_URL=http://localhost:3002
+      - NEXTAUTH_SECRET=your-secret-key-change-in-production
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+    restart: unless-stopped
