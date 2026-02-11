@@ -25,6 +25,13 @@ export default function AuthPage() {
         if (result?.error) {
           setError(result.error);
           showToast(result.error, "warning");
+        } else {
+          // [2026-02-09] 수정: 로그인 성공 시 명시적 리다이렉트 + 새로고침
+          // 원본: 리다이렉트 처리 없음 (signIn의 redirectTo에 의존)
+          // 수정 이유: useTransition 내에서 서버 리다이렉트가 제대로 작동하지 않음
+          showToast("✨ 로그인 성공!", "success");
+          router.refresh();
+          router.push("/");
         }
       } else {
         const result = await signUp(formData);

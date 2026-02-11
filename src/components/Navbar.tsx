@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Heart, User, Search, MessageCircle, Crown, Shield } from "lucide-react";
 
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   // @ts-ignore
   const isAdmin = session?.user?.prestige === 'ADMIN';
@@ -99,7 +100,10 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={async () => {
-                  await signOut({ redirect: true, callbackUrl: "/login" });
+                  // [2026-02-09] 수정: 로그아웃 후 명시적 새로고침 추가
+                  await signOut({ redirect: false });
+                  router.refresh();
+                  router.push("/login");
                 }}
                 className="text-[10px] font-bold tracking-widest text-white/20 hover:text-white transition-colors"
               >

@@ -24,61 +24,17 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'inquiries' | 'bookings' | 'members'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'inquiries' | 'bookings'>('pending');
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [revenueSummary, setRevenueSummary] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [memberSearch, setMemberSearch] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
     fetchInquiries();
     fetchBookings();
     fetchRevenue();
-    fetchAllUsers();
   }, []);
-
-  const fetchAllUsers = async () => {
-    try {
-      const res = await fetch("/api/admin/users");
-      if (res.ok) {
-        const data = await res.json();
-        setAllUsers(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const toggleUserApproval = async (userId: string, currentStatus: boolean) => {
-    const res = await fetch("/api/admin/users/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, approved: !currentStatus }),
-    });
-    if (res.ok) {
-      showToast(currentStatus ? "❌ 승인 취소됨" : "✅ 승인 완료", "success");
-      fetchAllUsers();
-      fetchDashboardData();
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    if (!confirm("정말 이 회원을 삭제하시겠습니까?")) return;
-    const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
-    if (res.ok) {
-      showToast("✅ 회원 삭제됨", "success");
-      fetchAllUsers();
-      fetchDashboardData();
-    }
-  };
-
-  const filteredMembers = allUsers.filter(
-    (user) =>
-      user.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
-      user.email?.toLowerCase().includes(memberSearch.toLowerCase())
-  );
 
   const fetchDashboardData = async () => {
     try {
@@ -264,12 +220,6 @@ export default function AdminDashboard() {
               >
                 문의/상담 ({inquiries.length})
               </button>
-              <button 
-                onClick={() => setActiveTab('members')}
-                className={`text-sm font-bold pb-2 ${activeTab === 'members' ? 'text-gold border-b-2 border-gold' : 'text-white/40'}`}
-              >
-                👥 전체 회원 ({allUsers.length})
-              </button>
             </div>
 
             {activeTab === 'pending' && (
@@ -367,84 +317,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))
-                )}
-              </div>
-            )}
-
-            {activeTab === 'members' && (
-              <div className="space-y-4">
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="이름 또는 이메일로 검색..."
-                    value={memberSearch}
-                    onChange={(e) => setMemberSearch(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:border-gold/50 outline-none"
-                  />
-                </div>
-                {filteredMembers.length === 0 ? (
-                  <p className="text-white/40 text-center py-10">회원이 없습니다.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b border-white/10">
-                        <tr>
-                          <th className="text-left py-3 px-2 text-xs text-white/50">회원</th>
-                          <th className="text-left py-3 px-2 text-xs text-white/50">등급</th>
-                          <th className="text-left py-3 px-2 text-xs text-white/50">승인</th>
-                          <th className="text-left py-3 px-2 text-xs text-white/50">액션</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredMembers.map((user) => (
-                          <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="py-3 px-2">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
-                                  {user.name?.[0] || "?"}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-sm">{user.name || "이름 없음"}</div>
-                                  <div className="text-xs text-white/40">{user.email}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-2">
-                              <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                user.prestige === 'DIAMOND' ? 'bg-purple-500/20 text-purple-400' :
-                                user.prestige === 'PLATINUM' ? 'bg-gray-400/20 text-gray-300' :
-                                user.prestige === 'GOLD' ? 'bg-gold/20 text-gold' :
-                                user.prestige === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
-                                'bg-white/10 text-white/50'
-                              }`}>
-                                {user.prestige || 'SILVER'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-2">
-                              <button
-                                onClick={() => toggleUserApproval(user.id, user.isApproved)}
-                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                                  user.isApproved
-                                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                    : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                                }`}
-                              >
-                                {user.isApproved ? '✓ 승인됨' : '✗ 미승인'}
-                              </button>
-                            </td>
-                            <td className="py-3 px-2">
-                              <button
-                                onClick={() => deleteUser(user.id)}
-                                className="px-3 py-1 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                              >
-                                삭제
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
                 )}
               </div>
             )}

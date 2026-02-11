@@ -18,9 +18,12 @@ COPY . .
 
 EXPOSE 3001
 
-# [2026-02-08] 수정: Prisma DB 동기화 강화
+# [2026-02-08] 수정: Prisma DB 동기화 + 자동 시드 데이터 입력
+COPY seed.js /app/seed.js
+
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'npx prisma db push --skip-generate 2>&1 || true' >> /entrypoint.sh && \
+    echo 'node /app/seed.js 2>&1 || true' >> /entrypoint.sh && \
     echo 'npm run dev' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 

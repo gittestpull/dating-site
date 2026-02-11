@@ -1,0 +1,32 @@
+# [2026-02-09] 프로덕션 빌드 Dockerfile v2
+# Next.js 16 호환
+
+FROM node:20
+
+WORKDIR /app
+
+# 의존성 설치
+COPY package*.json ./
+RUN npm ci
+
+# Prisma 생성
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# 소스 복사 및 빌드
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+RUN npm run build
+
+EXPOSE 3000
+
+# 엔트리포인트: DB 동기화 후 프로덕션 서버 실행
+COPY seed.js ./seed.js
+RUN echo '#!/bin/sh' > /entrypoint.sh && \
+    echo 'npx prisma db push --skip-generate 2>&1 || true' >> /entrypoint.sh && \
+    echo 'node seed.js 2>&1 || true' >> /entrypoint.sh && \
+    echo 'npm start' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
